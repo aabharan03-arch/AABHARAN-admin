@@ -299,9 +299,9 @@ function PaymentsPage() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <button onClick={() => fetchPayments(true)} title="Refresh" className="h-9 px-3 rounded-md border border-border bg-card hover:bg-muted text-xs">⟳</button>
-            <button className="hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium">
+            {/* <button className="hidden md:inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium">
               <Download className="h-3.5 w-3.5" /> Export CSV
-            </button>
+            </button> */}
             <button onClick={openRecordModal} className="inline-flex items-center gap-1.5 h-9 px-4 rounded-md bg-primary text-primary-foreground text-sm font-medium hover:opacity-95">
               <Plus className="h-4 w-4" /> Record payment
             </button>

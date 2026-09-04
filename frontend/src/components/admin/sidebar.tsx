@@ -8,6 +8,7 @@ import { ConfirmDialog } from "./modal";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { AdminUser } from "@/lib/api";
+import logoImg from "../assests/logo.jpeg";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -38,7 +39,7 @@ export function AdminSidebar({
       <div className="sticky top-0 bg-sidebar z-50 px-6 pt-6 pb-7">
         <Link to="/dashboard" className="flex items-center gap-3">
           <div className="h-12 w-12 rounded-full overflow-hidden flex-shrink-0 shadow-lg border border-gold/30">
-            <img src="/src/components/assests/logo.jpeg" alt="Aabharan Logo" className="h-full w-full object-cover" />
+            <img src={logoImg} alt="Aabharan Logo" className="h-full w-full object-cover" />
           </div>
           <div className="leading-tight">
             <div className="font-display text-xl tracking-wide text-ivory">Aabharan</div>

@@ -3,6 +3,7 @@ import { Lock, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { loginAdmin, getCurrentAdmin } from "@/lib/api";
+import logoImg from "@/components/assests/logo.jpeg";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in · Aabharan Admin" }] }),
@@ -106,7 +107,7 @@ function LoginPage() {
         <div className="relative">
           <Link to="/dashboard" className="flex items-center gap-4">
             <div className="h-20 w-20 rounded-full overflow-hidden flex-shrink-0 shadow-lg border-2 border-gold/30">
-              <img src="/src/components/assests/logo.jpeg" alt="Aabharan Logo" className="h-full w-full object-cover" />
+              <img src={logoImg} alt="Aabharan Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <div className="font-display text-2xl tracking-wide">Aabharan</div>
