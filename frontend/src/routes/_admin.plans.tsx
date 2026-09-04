@@ -108,12 +108,7 @@ function PlansPage() {
         title="Membership Plans"
         subtitle={subtitle}
         actions={
-          <button
-            onClick={openCreate}
-            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-95"
-          >
-            <Plus className="h-4 w-4" /> New plan
-          </button>
+          ""
         }
       />
 
