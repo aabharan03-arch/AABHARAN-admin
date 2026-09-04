@@ -843,7 +843,7 @@ export async function getStoreImages(filters?: {
 
     // FIX 1: Cleaned up corrupted URL string
     const response = await fetch(
-      `http://localhost:3000/api/admin/store-imgs${qs ? `?${qs}` : ""}`,
+      `${API_BASE_URL}/admin/store-imgs${qs ? `?${qs}` : ""}`,
       {
         method: "GET",
         headers: {
@@ -904,7 +904,7 @@ export async function createStoreImage(payload: {
     }
 
     // Do NOT set Content-Type manually — browser sets multipart boundary
-    const response = await fetch(`http://localhost:3000/api/admin/store-imgs`, {
+    const response = await fetch(`${API_BASE_URL}/admin/store-imgs`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: fd,
@@ -963,7 +963,7 @@ export async function updateStoreImage(
       }
 
       // FIX 3 & 4: Fixed URL and missing colon in method property
-      response = await fetch(`http://localhost:3000/api/admin/store-imgs/${id}`, {
+      response = await fetch(`${API_BASE_URL}/admin/store-imgs/${id}`, {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
@@ -971,7 +971,7 @@ export async function updateStoreImage(
     } else {
       // JSON — field edits only (expiry, order, active)
       // FIX 5: Fixed URL and missing colon in Authorization header
-      response = await fetch(`http://localhost:3000/api/admin/store-imgs/${id}`, {
+      response = await fetch(`${API_BASE_URL}/admin/store-imgs/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -1010,7 +1010,7 @@ export async function deleteStoreImage(
     if (!token) return { success: false, error: "No token found" };
 
     // FIX 7: Fixed corrupted URL string
-    const response = await fetch(`http://localhost:3000/api/admin/store-imgs/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/admin/store-imgs/${id}`, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
