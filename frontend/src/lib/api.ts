@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://aabharan.vercel.app/api";
+const API_BASE_URL = "http://localhost:3000/api";
 
 const TOKEN_KEY = "aabharan_admin_token";
 
@@ -604,226 +604,209 @@ export async function getStores(): Promise<{ success: boolean; stores: Store[]; 
 
 
 
+// Replace your current Plan interface + createPlan/getPlans/updatePlan
+// section in the Admin frontend lib/api.ts with this code.
+
 export interface Plan {
-
   id: string;
-
   name: string;
-
   months: number;
-
   cost: number;
 
+  // null = unlimited
+  maxProducts: number | null;
+
+  maxCoverPhotos: number;
+  maxAdvertisePhotos: number;
+  popupEnabled: boolean;
+
+  // Higher number = higher public priority
+  priority: number;
+
   createdAt: string;
-
   updatedAt: string;
-
 }
 
-
+export type PlanPayload = {
+  name: string;
+  months: number;
+  cost: number;
+  maxProducts: number | null;
+  maxCoverPhotos: number;
+  maxAdvertisePhotos: number;
+  popupEnabled: boolean;
+  priority: number;
+};
 
 export async function createPlan(
-
-  name: string,
-
-  months: number,
-
-  cost: number
-
-): Promise<{ success: boolean; plan?: Plan; error?: string }> {
-
+  payload: PlanPayload
+): Promise<{
+  success: boolean;
+  plan?: Plan;
+  error?: string;
+}> {
   try {
-
     const token = getToken();
 
     if (!token) {
-
-      return { success: false, error: "No token found" };
-
+      return {
+        success: false,
+        error: "No token found",
+      };
     }
 
-
-
-    const response = await fetch(`${API_BASE_URL}/admin/plans`, {
-
-      method: "POST",
-
-      headers: {
-
-        "Content-Type": "application/json",
-
-        Authorization: `Bearer ${token}`,
-
-      },
-
-      body: JSON.stringify({ name, months, cost }),
-
-    });
-
-
+    const response = await fetch(
+      `${API_BASE_URL}/admin/plans`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
 
     const data = await response.json();
 
-
-
     if (!response.ok) {
-
-      return { success: false, error: data.error || "Failed to create plan" };
-
+      return {
+        success: false,
+        error:
+          data.error ||
+          "Failed to create plan",
+      };
     }
 
-
-
-    return { success: true, plan: data.plan };
-
-  } catch (error) {
-
-    console.error("Create plan API error:", error);
-
     return {
-
-      success: false,
-
-      error: error instanceof Error ? error.message : "Network error occurred",
-
+      success: true,
+      plan: data.plan,
     };
-
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Network error occurred",
+    };
   }
-
 }
 
-
-
-export async function getPlans(): Promise<{ success: boolean; plans: Plan[]; error?: string }> {
-
+export async function getPlans(): Promise<{
+  success: boolean;
+  plans: Plan[];
+  error?: string;
+}> {
   try {
-
     const token = getToken();
 
     if (!token) {
-
-      return { success: false, plans: [], error: "No token found" };
-
+      return {
+        success: false,
+        plans: [],
+        error: "No token found",
+      };
     }
 
-
-
-    const response = await fetch(`${API_BASE_URL}/admin/plans`, {
-
-      method: "GET",
-
-      headers: {
-
-        "Content-Type": "application/json",
-
-        Authorization: `Bearer ${token}`,
-
-      },
-
-    });
-
-
+    const response = await fetch(
+      `${API_BASE_URL}/admin/plans`,
+      {
+        headers: {
+          "Content-Type":
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
 
     const data = await response.json();
 
-
-
     if (!response.ok) {
-
-      return { success: false, plans: [], error: data.error || "Failed to fetch plans" };
-
+      return {
+        success: false,
+        plans: [],
+        error:
+          data.error ||
+          "Failed to fetch plans",
+      };
     }
 
-
-
-    return { success: true, plans: data.plans || [] };
-
-  } catch (error) {
-
-    console.error("Get plans API error:", error);
-
     return {
-
+      success: true,
+      plans: data.plans || [],
+    };
+  } catch (error) {
+    return {
       success: false,
-
       plans: [],
-
-      error: error instanceof Error ? error.message : "Network error occurred",
-
+      error:
+        error instanceof Error
+          ? error.message
+          : "Network error occurred",
     };
-
   }
-
 }
-
-
 
 export async function updatePlan(
-
   id: string,
-
-  updates: { name?: string; months?: number; cost?: number }
-
-): Promise<{ success: boolean; plan?: Plan; error?: string }> {
-
+  updates: Partial<PlanPayload>
+): Promise<{
+  success: boolean;
+  plan?: Plan;
+  error?: string;
+}> {
   try {
-
     const token = getToken();
 
     if (!token) {
-
-      return { success: false, error: "No token found" };
-
+      return {
+        success: false,
+        error: "No token found",
+      };
     }
 
-
-
-    const response = await fetch(`${API_BASE_URL}/admin/plans/${id}`, {
-
-      method: "PUT",
-
-      headers: {
-
-        "Content-Type": "application/json",
-
-        Authorization: `Bearer ${token}`,
-
-      },
-
-      body: JSON.stringify(updates),
-
-    });
-
-
+    const response = await fetch(
+      `${API_BASE_URL}/admin/plans/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type":
+            "application/json",
+          Authorization:
+            `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      }
+    );
 
     const data = await response.json();
 
-
-
     if (!response.ok) {
-
-      return { success: false, error: data.error || "Failed to update plan" };
-
+      return {
+        success: false,
+        error:
+          data.error ||
+          "Failed to update plan",
+      };
     }
 
-
-
-    return { success: true, plan: data.plan };
-
-  } catch (error) {
-
-    console.error("Update plan API error:", error);
-
     return {
-
-      success: false,
-
-      error: error instanceof Error ? error.message : "Network error occurred",
-
+      success: true,
+      plan: data.plan,
     };
-
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Network error occurred",
+    };
   }
-
 }
 
 

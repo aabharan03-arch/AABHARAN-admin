@@ -1,14 +1,40 @@
-// app/routes/_admin.plans.tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { Card } from "@/components/admin/ui-bits";
-import { Check, Plus, Crown, Sparkles, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import {
+  Plus,
+  Crown,
+  Sparkles,
+  X,
+  Package,
+  Image,
+  Megaphone,
+  Layers3,
+} from "lucide-react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { toast } from "sonner";
-import { createPlan, getPlans, updatePlan, type Plan } from "@/lib/api";
+import {
+  createPlan,
+  getPlans,
+  updatePlan,
+  type Plan,
+} from "@/lib/api";
 
-export const Route = createFileRoute("/_admin/plans")({
-  head: () => ({ meta: [{ title: "Membership Plans · Aabharan Admin" }] }),
+export const Route = createFileRoute(
+  "/_admin/plans"
+)({
+  head: () => ({
+    meta: [
+      {
+        title:
+          "Membership Plans · Aabharan Admin",
+      },
+    ],
+  }),
   component: PlansPage,
 });
 
@@ -16,22 +42,32 @@ function inrFull(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
 }
 
-// Module-level cache — persists across route navigations within the same
-// session (not across full page reloads), so switching away from /plans
-// and back doesn't refetch unless explicitly refreshed or after a mutation.
 let plansCache: Plan[] | null = null;
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_MS = 5 * 60 * 1000;
 let plansCacheFetchedAt = 0;
 
 function PlansPage() {
-  const [plans, setPlans] = useState<Plan[]>(plansCache ?? []);
-  const [loading, setLoading] = useState(plansCache === null);
-  const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<Plan[]>(
+    plansCache ?? []
+  );
+  const [loading, setLoading] = useState(
+    plansCache === null
+  );
+  const [error, setError] = useState<
+    string | null
+  >(null);
+  const [modalOpen, setModalOpen] =
+    useState(false);
+  const [editingPlan, setEditingPlan] =
+    useState<Plan | null>(null);
 
-  const fetchPlans = async (force = false) => {
-    const isFresh = plansCache !== null && Date.now() - plansCacheFetchedAt < CACHE_TTL_MS;
+  const fetchPlans = async (
+    force = false
+  ) => {
+    const isFresh =
+      plansCache !== null &&
+      Date.now() - plansCacheFetchedAt <
+        CACHE_TTL_MS;
 
     if (!force && isFresh) {
       setPlans(plansCache!);
@@ -43,130 +79,169 @@ function PlansPage() {
     try {
       setLoading(true);
       const response = await getPlans();
+
       if (response.success) {
         plansCache = response.plans;
         plansCacheFetchedAt = Date.now();
         setPlans(response.plans);
         setError(null);
       } else {
-        setError(response.error || "Failed to fetch plans");
-        toast.error(response.error || "Failed to fetch plans");
+        setError(
+          response.error ||
+            "Failed to fetch plans"
+        );
       }
-    } catch (err) {
-      console.error("Error fetching plans:", err);
-      setError("An error occurred while fetching plans");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchPlans();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    void fetchPlans();
   }, []);
 
-  const openCreate = () => {
-    setEditingPlan(null);
-    setModalOpen(true);
-  };
-
-  const openEdit = (plan: Plan) => {
-    setEditingPlan(plan);
-    setModalOpen(true);
-  };
-
-  const handleSaved = (savedPlan: Plan, wasEdit: boolean) => {
-    const updated = wasEdit
-      ? plans.map((p) => (p.id === savedPlan.id ? savedPlan : p))
-      : [...plans, savedPlan];
-
-    setPlans(updated);
-    // Keep the module-level cache in sync so other mounts of this page
-    // (e.g. navigating away and back) see the mutation immediately.
-    plansCache = updated;
-    plansCacheFetchedAt = Date.now();
-
-    setModalOpen(false);
-    setEditingPlan(null);
-  };
-
-  // Derived, memoized values — recomputed only when the plans list changes,
-  // not on every render (e.g. when the modal opens/closes).
-  const subtitle = useMemo(() => {
-    if (loading) return "Loading...";
-    return `${plans.length} plan${plans.length !== 1 ? "s" : ""} configured`;
-  }, [loading, plans.length]);
-
   const sortedPlans = useMemo(
-    () => [...plans].sort((a, b) => a.cost - b.cost),
+    () =>
+      [...plans].sort(
+        (a, b) =>
+          a.priority - b.priority ||
+          a.cost - b.cost
+      ),
     [plans]
   );
+
+  const handleSaved = (
+    saved: Plan,
+    wasEdit: boolean
+  ) => {
+    const next = wasEdit
+      ? plans.map((plan) =>
+          plan.id === saved.id
+            ? saved
+            : plan
+        )
+      : [...plans, saved];
+
+    setPlans(next);
+    plansCache = next;
+    plansCacheFetchedAt = Date.now();
+    setEditingPlan(null);
+    setModalOpen(false);
+  };
 
   return (
     <>
       <AdminTopbar
         title="Membership Plans"
-        subtitle={subtitle}
-        actions={
-          ""
-        }
+        subtitle={`${plans.length} plan${
+          plans.length === 1 ? "" : "s"
+        } configured`}
       />
 
       <div className="px-6 lg:px-10 py-8 space-y-5">
-        {/* Fallback create bar — always visible regardless of topbar actions rendering */}
         <div className="flex justify-end">
           <button
-            onClick={openCreate}
-            className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-95"
+            onClick={() => {
+              setEditingPlan(null);
+              setModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium"
           >
-            <Plus className="h-4 w-4" /> New plan
+            <Plus className="h-4 w-4" />
+            New plan
           </button>
         </div>
 
         {loading ? (
-          <PlansSkeleton />
+          <Card className="p-10 text-center">
+            Loading plans…
+          </Card>
         ) : error ? (
-          <Card className="p-6 text-center text-red-500">{error}</Card>
-        ) : sortedPlans.length === 0 ? (
-          <Card className="p-10 text-center space-y-4">
-            <p className="text-muted-foreground">No plans yet. Create your first membership plan to get started.</p>
-            <button
-              onClick={openCreate}
-              className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-95"
-            >
-              <Plus className="h-4 w-4" /> Create plan
-            </button>
+          <Card className="p-6 text-center text-red-500">
+            {error}
           </Card>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-            {sortedPlans.map((p, i) => (
-              <Card key={p.id} className="p-6 relative overflow-hidden">
-                {i === sortedPlans.length - 1 && sortedPlans.length > 1 && (
-                  <div className="absolute top-4 right-4 inline-flex items-center gap-1 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-medium text-[oklch(0.5_0.13_75)]">
-                    <Sparkles className="h-3 w-3" /> Newest
+            {sortedPlans.map((plan) => (
+              <Card
+                key={plan.id}
+                className="p-6"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-5 w-5" />
+                    <h3 className="font-display text-2xl">
+                      {plan.name}
+                    </h3>
                   </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-muted-foreground" />
-                  <h3 className="font-display text-2xl text-foreground">{p.name}</h3>
+                  <span className="text-xs text-muted-foreground">
+                    Priority {plan.priority}
+                  </span>
                 </div>
+
                 <div className="mt-4">
-                  <div className="flex items-baseline gap-1">
-                    <span className="font-display text-4xl text-foreground">{inrFull(p.cost)}</span>
-                    <span className="text-xs text-muted-foreground">
-                      / {p.months} mo{p.months !== 1 ? "s" : ""}
-                    </span>
+                  <div className="font-display text-4xl">
+                    {inrFull(plan.cost)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    / {plan.months} month
+                    {plan.months !== 1 ? "s" : ""}
                   </div>
                 </div>
-                <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground border-t border-border pt-4">
-                  <span>Updated {new Date(p.updatedAt).toLocaleDateString()}</span>
-                  <button
-                    onClick={() => openEdit(p)}
-                    className="text-foreground hover:text-[oklch(0.45_0.1_75)] font-medium"
-                  >
-                    Edit →
-                  </button>
+
+                <div className="mt-6 space-y-3 text-sm">
+                  <Feature
+                    icon={Package}
+                    label="Products"
+                    value={
+                      plan.maxProducts === null
+                        ? "Unlimited"
+                        : String(
+                            plan.maxProducts
+                          )
+                    }
+                  />
+                  <Feature
+                    icon={Image}
+                    label="Cover photos"
+                    value={String(
+                      plan.maxCoverPhotos
+                    )}
+                  />
+                  <Feature
+                    icon={Megaphone}
+                    label="Advertisement photos"
+                    value={String(
+                      plan.maxAdvertisePhotos
+                    )}
+                  />
+                  <Feature
+                    icon={Sparkles}
+                    label="Popup"
+                    value={
+                      plan.popupEnabled
+                        ? "Enabled"
+                        : "Disabled"
+                    }
+                  />
+                  <Feature
+                    icon={Layers3}
+                    label="Public priority"
+                    value={String(
+                      plan.priority
+                    )}
+                  />
                 </div>
+
+                <button
+                  onClick={() => {
+                    setEditingPlan(plan);
+                    setModalOpen(true);
+                  }}
+                  className="mt-6 w-full h-9 rounded-lg border border-border text-sm font-medium hover:bg-muted"
+                >
+                  Edit plan
+                </button>
               </Card>
             ))}
           </div>
@@ -187,24 +262,24 @@ function PlansPage() {
   );
 }
 
-function PlansSkeleton() {
+function Feature({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Card key={i} className="p-6 overflow-hidden">
-          <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded-full bg-muted animate-pulse" />
-            <div className="h-6 w-24 rounded bg-muted animate-pulse" />
-          </div>
-          <div className="mt-4">
-            <div className="h-9 w-32 rounded bg-muted animate-pulse" />
-          </div>
-          <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
-            <div className="h-3 w-20 rounded bg-muted animate-pulse" />
-            <div className="h-3 w-12 rounded bg-muted animate-pulse" />
-          </div>
-        </Card>
-      ))}
+    <div className="flex items-center justify-between gap-3">
+      <span className="flex items-center gap-2 text-muted-foreground">
+        <Icon className="h-4 w-4" />
+        {label}
+      </span>
+      <span className="font-medium">
+        {value}
+      </span>
     </div>
   );
 }
@@ -216,48 +291,149 @@ function PlanFormModal({
 }: {
   plan: Plan | null;
   onClose: () => void;
-  onSaved: (plan: Plan, wasEdit: boolean) => void;
+  onSaved: (
+    plan: Plan,
+    wasEdit: boolean
+  ) => void;
 }) {
   const isEdit = !!plan;
-  const [name, setName] = useState(plan?.name ?? "");
-  const [months, setMonths] = useState(plan?.months?.toString() ?? "");
-  const [cost, setCost] = useState(plan?.cost?.toString() ?? "");
-  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [name, setName] = useState(
+    plan?.name ?? ""
+  );
+  const [months, setMonths] = useState(
+    plan?.months?.toString() ?? "1"
+  );
+  const [cost, setCost] = useState(
+    plan?.cost?.toString() ?? "0"
+  );
+
+  const [maxProducts, setMaxProducts] =
+    useState(
+      plan?.maxProducts === null
+        ? ""
+        : plan?.maxProducts?.toString() ??
+            "20"
+    );
+
+  const [
+    unlimitedProducts,
+    setUnlimitedProducts,
+  ] = useState(
+    plan?.maxProducts === null
+  );
+
+  const [
+    maxCoverPhotos,
+    setMaxCoverPhotos,
+  ] = useState(
+    plan?.maxCoverPhotos?.toString() ??
+      "0"
+  );
+
+  const [
+    maxAdvertisePhotos,
+    setMaxAdvertisePhotos,
+  ] = useState(
+    plan?.maxAdvertisePhotos?.toString() ??
+      "0"
+  );
+
+  const [popupEnabled, setPopupEnabled] =
+    useState(
+      plan?.popupEnabled ?? false
+    );
+
+  const [priority, setPriority] =
+    useState(
+      plan?.priority?.toString() ?? "1"
+    );
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const submit = async (
+    e: React.FormEvent
+  ) => {
     e.preventDefault();
 
-    const monthsNum = parseInt(months, 10);
-    const costNum = parseFloat(cost);
+    const payload = {
+      name: name.trim(),
+      months: Number(months),
+      cost: Number(cost),
+      maxProducts: unlimitedProducts
+        ? null
+        : Number(maxProducts),
+      maxCoverPhotos:
+        Number(maxCoverPhotos),
+      maxAdvertisePhotos:
+        Number(maxAdvertisePhotos),
+      popupEnabled,
+      priority: Number(priority),
+    };
 
-    if (!name.trim()) {
-      toast.error("Plan name is required");
+    if (!payload.name) {
+      toast.error(
+        "Plan name is required"
+      );
       return;
     }
-    if (!Number.isInteger(monthsNum) || monthsNum <= 0) {
-      toast.error("Months must be a positive whole number");
-      return;
-    }
-    if (isNaN(costNum) || costNum < 0) {
-      toast.error("Cost must be a valid non-negative number");
+
+    const numericFields = [
+      payload.months,
+      payload.cost,
+      payload.maxCoverPhotos,
+      payload.maxAdvertisePhotos,
+      payload.priority,
+    ];
+
+    if (
+      numericFields.some(
+        (value) =>
+          !Number.isFinite(value) ||
+          value < 0
+      ) ||
+      payload.months <= 0 ||
+      (!unlimitedProducts &&
+        (!Number.isInteger(
+          payload.maxProducts
+        ) ||
+          Number(payload.maxProducts) <
+            0))
+    ) {
+      toast.error(
+        "Please enter valid plan limits."
+      );
       return;
     }
 
     setSaving(true);
+
     try {
       const result = isEdit
-        ? await updatePlan(plan!.id, { name: name.trim(), months: monthsNum, cost: costNum })
-        : await createPlan(name.trim(), monthsNum, costNum);
+        ? await updatePlan(plan!.id, payload)
+        : await createPlan(payload);
 
-      if (result.success && result.plan) {
-        toast.success(isEdit ? "Plan updated" : "Plan created");
-        onSaved(result.plan, isEdit);
+      if (
+        result.success &&
+        result.plan
+      ) {
+        toast.success(
+          isEdit
+            ? "Plan updated. Store Admin limits are now updated."
+            : "Plan created"
+        );
+
+        onSaved(
+          result.plan,
+          isEdit
+        );
       } else {
-        toast.error(result.error || "Failed to save plan");
+        toast.error(
+          result.error ||
+            "Failed to save plan"
+        );
       }
-    } catch (err) {
-      console.error("Save plan error:", err);
-      toast.error("Failed to save plan");
     } finally {
       setSaving(false);
     }
@@ -265,68 +441,184 @@ function PlanFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative w-full max-w-sm rounded-xl border border-border bg-card shadow-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-xl text-foreground">
-            {isEdit ? "Edit plan" : "New plan"}
-          </h2>
-          <button onClick={onClose} className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted text-muted-foreground">
+      <div
+        className="absolute inset-0 bg-black/50"
+        onClick={onClose}
+      />
+
+      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl border border-border bg-card shadow-xl">
+        <div className="sticky top-0 bg-card flex items-center justify-between px-6 py-4 border-b border-border">
+          <div>
+            <h2 className="font-display text-xl">
+              {isEdit
+                ? "Edit plan"
+                : "New plan"}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Changes to limits take effect for assigned Store Admins immediately.
+            </p>
+          </div>
+
+          <button
+            onClick={onClose}
+            className="h-8 w-8 grid place-items-center rounded-md hover:bg-muted"
+          >
             <X className="h-4 w-4" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-xs font-medium text-foreground">Plan name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Gold"
-              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-foreground">Duration (months)</label>
-            <input
-              type="number"
-              min={1}
-              step={1}
+
+        <form
+          onSubmit={submit}
+          className="p-6 space-y-4"
+        >
+          <Field
+            label="Plan name"
+            value={name}
+            onChange={setName}
+          />
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Months"
               value={months}
-              onChange={(e) => setMonths(e.target.value)}
-              placeholder="e.g. 6"
-              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-medium text-foreground">Cost (₹)</label>
-            <input
+              onChange={setMonths}
               type="number"
-              min={0}
-              step="0.01"
+            />
+            <Field
+              label="Cost"
               value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              placeholder="e.g. 5000"
-              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+              onChange={setCost}
+              type="number"
             />
           </div>
-          <div className="flex gap-2 pt-2">
+
+          <div className="border-t border-border pt-4">
+            <h3 className="font-medium">
+              Store Admin restrictions
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              These values are read directly by Store Admin APIs.
+            </p>
+          </div>
+
+          <label className="flex items-center gap-3 rounded-lg border border-border p-3">
+            <input
+              type="checkbox"
+              checked={unlimitedProducts}
+              onChange={(e) =>
+                setUnlimitedProducts(
+                  e.target.checked
+                )
+              }
+            />
+            <span className="text-sm">
+              Unlimited products
+            </span>
+          </label>
+
+          {!unlimitedProducts && (
+            <Field
+              label="Maximum products"
+              value={maxProducts}
+              onChange={setMaxProducts}
+              type="number"
+            />
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Maximum cover photos"
+              value={maxCoverPhotos}
+              onChange={setMaxCoverPhotos}
+              type="number"
+            />
+            <Field
+              label="Maximum advertisement photos"
+              value={maxAdvertisePhotos}
+              onChange={
+                setMaxAdvertisePhotos
+              }
+              type="number"
+            />
+          </div>
+
+          <label className="flex items-center gap-3 rounded-lg border border-border p-3">
+            <input
+              type="checkbox"
+              checked={popupEnabled}
+              onChange={(e) =>
+                setPopupEnabled(
+                  e.target.checked
+                )
+              }
+            />
+            <span className="text-sm">
+              Popup feature enabled
+            </span>
+          </label>
+
+          <Field
+            label="Public priority"
+            value={priority}
+            onChange={setPriority}
+            type="number"
+          />
+
+          <div className="flex justify-end gap-2 pt-3">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 h-10 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors"
+              className="h-10 px-4 rounded-lg border border-border text-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-95 disabled:opacity-60"
+              className="h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-60"
             >
-              {saving ? "Saving…" : isEdit ? "Save changes" : "Create plan"}
+              {saving
+                ? "Saving…"
+                : isEdit
+                ? "Save changes"
+                : "Create plan"}
             </button>
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="text-xs font-medium">
+        {label}
+      </label>
+      <input
+        type={type}
+        min={
+          type === "number"
+            ? 0
+            : undefined
+        }
+        value={value}
+        onChange={(e) =>
+          onChange(e.target.value)
+        }
+        className="mt-1.5 w-full h-10 px-3 rounded-lg border border-border bg-background text-sm"
+      />
     </div>
   );
 }
