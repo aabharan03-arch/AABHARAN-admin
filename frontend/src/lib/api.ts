@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:3000/api";
+const API_BASE_URL = "https://aabharan.vercel.app/api";
 
 const TOKEN_KEY = "aabharan_admin_token";
 
